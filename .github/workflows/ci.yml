@@ -1,15 +1,10 @@
 # =============================================================================
 # CI - Integración Continua
 # =============================================================================
-# Este workflow ejecuta los tests unitarios cada vez que hay un push o PR
-# hacia las ramas principales (main, develop).
-#
-# Etapas:
-#   1. Checkout del código
-#   2. Setup de Bun
-#   3. Instalación de dependencias
-#   4. Ejecución de tests del servidor (bun test)
-#   5. Ejecución de tests del cliente (react-scripts test)
+# Este workflow ejecuta tests en todas las ramas:
+#   - Tests unitarios
+#   - Tests frontend
+#   - Tests de integración
 # =============================================================================
 
 name: CI - Tests
@@ -30,10 +25,10 @@ env:
 
 jobs:
   # ===========================================================================
-  # Job: Test del Servidor (Backend)
+  # Job 1: Tests Unitarios
   # ===========================================================================
-  test-server:
-    name:  Tests Backend (Bun)
+  test-unit:
+    name: Tests Unitarios (Backend)
     runs-on: ubuntu-latest
     
     defaults:
@@ -41,26 +36,28 @@ jobs:
         working-directory: horarios-plus-plus-server
 
     steps:
-      - name:  Checkout del código
+      - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name:  Setup Bun
+      - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name:  Instalar dependencias
+      - name: Instalar dependencias
         run: bun install
-        working-directory: .
 
-      - name:  Ejecutar tests unitarios del servidor
-        run: bun test
+      - name: Ejecutar tests unitarios
+        run: bun test src/models/classes.test.ts
+
+      - name: Tests unitarios completados
+        run: echo "Tests unitarios pasaron correctamente"
 
   # ===========================================================================
-  # Job: Test del Cliente (Frontend)
+  # Job 2: Tests del Cliente (Frontend)
   # ===========================================================================
   test-client:
-    name:  Tests Frontend (Jest)
+    name: Tests Frontend
     runs-on: ubuntu-latest
     
     defaults:
@@ -68,28 +65,27 @@ jobs:
         working-directory: horarios-plus-plus-client
 
     steps:
-      - name:  Checkout del código
+      - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name:  Setup Bun
+      - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name:  Instalar dependencias
+      - name: Instalar dependencias
         run: bun install
-        working-directory: .
 
-      - name:  Ejecutar tests del cliente
+      - name: Ejecutar tests del cliente
         run: bun run test -- --watchAll=false --passWithNoTests
         env:
           CI: true
 
   # ===========================================================================
-  # Job: Tests de Integración
+  # Job 3: Tests de Integración (en todas las ramas)
   # ===========================================================================
   test-integration:
-    name:  Tests Integración
+    name: Tests Integración
     runs-on: ubuntu-latest
     
     services:
@@ -97,38 +93,111 @@ jobs:
         image: mongo:7
         ports:
           - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     defaults:
       run:
         working-directory: horarios-plus-plus-server
 
     steps:
-      - name:  Checkout del código
+      - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name:  Setup Bun
+      - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name:  Instalar dependencias
+      - name: Instalar dependencias
         run: bun install
-        working-directory: .
 
-      - name:  Iniciar servidor en background
-        run: bun run src/index.ts &
+      - name: Iniciar servidor en background
+        run: |
+          bun run src/index.ts &
+          SERVER_PID=$!
+          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
         env:
           MONGO_URI: mongodb://localhost:27017/horarios-test
           PORT: 4000
+          CREATE_ADMIN_ON_START: false
 
-      - name:  Esperar que el servidor inicie
+      - name: Esperar que el servidor esté listo
         run: |
-          echo "Esperando que el servidor esté listo..."
-          sleep 10
-          curl --retry 5 --retry-delay 2 --retry-connrefused http://localhost:4000 || true
+          echo "Esperando que el servidor esté listo en localhost:4000..."
+          for i in {1..30}; do
+            if curl -f http://localhost:4000 2>/dev/null; then
+              echo "Servidor respondiendo correctamente"
+              exit 0
+            fi
+            echo "Intento $i/30..."
+            sleep 2
+          done
+          echo "Servidor no respondió después de 60 segundos"
+          exit 1
 
-      - name:  Ejecutar tests de integración
+      - name: Ejecutar tests de integración
         run: bun test src/routes/integration.test.ts
         env:
           MONGO_URI: mongodb://localhost:27017/horarios-test
+          API_URL: http://localhost:4000
+
+      - name: Detener servidor
+        if: always()
+        run: |
+          if [ ! -z "$SERVER_PID" ]; then
+            kill $SERVER_PID || true
+          fi
+
+  # ===========================================================================
+  # Job 4: Resumen del CI
+  # ===========================================================================
+  ci-summary:
+    name: Resumen CI
+    runs-on: ubuntu-latest
+    needs: [test-unit, test-client, test-integration]
+    if: always()
+    
+    steps:
+      - name: Verificar resultados
+        run: |
+          echo "==================================="
+          echo "RESUMEN DE CI"
+          echo "==================================="
+          echo "Rama: ${{ github.ref }}"
+          echo "Evento: ${{ github.event_name }}"
+          echo ""
+          
+          if [[ "${{ needs.test-unit.result }}" == "success" ]]; then
+            echo "Tests Unitarios: PASS"
+          else
+            echo "Tests Unitarios: FAIL"
+          fi
+          
+          if [[ "${{ needs.test-client.result }}" == "success" ]]; then
+            echo "Tests Frontend: PASS"
+          else
+            echo "Tests Frontend: FAIL"
+          fi
+          
+          if [[ "${{ needs.test-integration.result }}" == "success" ]]; then
+            echo "Tests Integración: PASS"
+          else
+            echo "Tests Integración: FAIL"
+          fi
+          
+          if [[ "${{ needs.test-unit.result }}" != "success" ]] || \
+             [[ "${{ needs.test-client.result }}" != "success" ]] || \
+             [[ "${{ needs.test-integration.result }}" != "success" ]]; then
+            echo ""
+            echo "CI FAILED - Por favor revisa los errores"
+            exit 1
+          fi
+          
+          echo ""
+          echo "CI PASSED - Todos los tests pasaron correctamente"
+
 
