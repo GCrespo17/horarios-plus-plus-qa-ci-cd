@@ -1,0 +1,134 @@
+# =============================================================================
+# CI - Integración Continua
+# =============================================================================
+# Este workflow ejecuta los tests unitarios cada vez que hay un push o PR
+# hacia las ramas principales (main, develop).
+#
+# Etapas:
+#   1. Checkout del código
+#   2. Setup de Bun
+#   3. Instalación de dependencias
+#   4. Ejecución de tests del servidor (bun test)
+#   5. Ejecución de tests del cliente (react-scripts test)
+# =============================================================================
+
+name: CI - Tests
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+env:
+  BUN_VERSION: "1.1.0"
+
+jobs:
+  # ===========================================================================
+  # Job: Test del Servidor (Backend)
+  # ===========================================================================
+  test-server:
+    name:  Tests Backend (Bun)
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: horarios-plus-plus-server
+
+    steps:
+      - name:  Checkout del código
+        uses: actions/checkout@v4
+
+      - name:  Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name:  Instalar dependencias
+        run: bun install
+        working-directory: .
+
+      - name:  Ejecutar tests unitarios del servidor
+        run: bun test
+
+  # ===========================================================================
+  # Job: Test del Cliente (Frontend)
+  # ===========================================================================
+  test-client:
+    name:  Tests Frontend (Jest)
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: horarios-plus-plus-client
+
+    steps:
+      - name:  Checkout del código
+        uses: actions/checkout@v4
+
+      - name:  Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name:  Instalar dependencias
+        run: bun install
+        working-directory: .
+
+      - name:  Ejecutar tests del cliente
+        run: bun run test -- --watchAll=false --passWithNoTests
+        env:
+          CI: true
+
+  # ===========================================================================
+  # Job: Tests de Integración
+  # ===========================================================================
+  test-integration:
+    name:  Tests Integración
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+
+    defaults:
+      run:
+        working-directory: horarios-plus-plus-server
+
+    steps:
+      - name:  Checkout del código
+        uses: actions/checkout@v4
+
+      - name:  Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name:  Instalar dependencias
+        run: bun install
+        working-directory: .
+
+      - name:  Iniciar servidor en background
+        run: bun run src/index.ts &
+        env:
+          MONGO_URI: mongodb://localhost:27017/horarios-test
+          PORT: 4000
+
+      - name:  Esperar que el servidor inicie
+        run: |
+          echo "Esperando que el servidor esté listo..."
+          sleep 10
+          curl --retry 5 --retry-delay 2 --retry-connrefused http://localhost:4000 || true
+
+      - name:  Ejecutar tests de integración
+        run: bun test src/routes/integration.test.ts
+        env:
+          MONGO_URI: mongodb://localhost:27017/horarios-test
+

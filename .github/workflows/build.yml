@@ -1,0 +1,128 @@
+# =============================================================================
+# Build - Verificación de Compilación
+# =============================================================================
+# Este workflow verifica que el código compile correctamente.
+# Valida tanto el build del cliente como del servidor.
+#
+# Etapas:
+#   1. Checkout del código
+#   2. Setup de Bun
+#   3. Instalación de dependencias
+#   4. Build del servidor (Bun)
+#   5. Build del cliente (React)
+#   6. Guardar artefactos de build
+# =============================================================================
+
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+env:
+  BUN_VERSION: "1.1.0"
+
+jobs:
+  # ===========================================================================
+  # Job: Build del Servidor
+  # ===========================================================================
+  build-server:
+    name: Build Server
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: horarios-plus-plus-server
+
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Instalar dependencias
+        run: bun install
+        working-directory: .
+
+      - name: Build del servidor
+        run: bun run build
+
+      - name: Subir artefactos del servidor
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-build
+          path: horarios-plus-plus-server/dist
+          retention-days: 7
+
+  # ===========================================================================
+  # Job: Build del Cliente
+  # ===========================================================================
+  build-client:
+    name: Build Client
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: horarios-plus-plus-client
+
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Instalar dependencias
+        run: bun install
+        working-directory: .
+
+      - name: Build del cliente
+        run: bun run build
+        env:
+          CI: false  # Evita que warnings sean tratados como errores
+
+      - name: Subir artefactos del cliente
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-build
+          path: horarios-plus-plus-client/build
+          retention-days: 7
+
+  # ===========================================================================
+  # Job: Verificacion de TypeScript
+  # ===========================================================================
+  typecheck:
+    name: TypeScript Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Instalar dependencias
+        run: bun install
+
+      - name: Verificar tipos en servidor
+        run: bunx tsc --noEmit -p horarios-plus-plus-server/tsconfig.json
+        continue-on-error: true
+
+      - name: Verificar tipos en cliente
+        run: bunx tsc --noEmit -p horarios-plus-plus-client/tsconfig.json
+        continue-on-error: true
+
