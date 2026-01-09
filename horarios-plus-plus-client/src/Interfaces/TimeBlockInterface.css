@@ -1,0 +1,270 @@
+.main-container{
+  display: flex;
+
+  /* Para posicionar el main container */
+  height: 100vh;
+  max-height: 100vh;
+  box-sizing: border-box;
+  padding-top: var(--navbar-size);
+
+  flex-flow: row nowrap;
+  overflow: hidden;
+
+  align-items: stretch;
+} 
+
+.course-box-container {
+  overflow: scroll;
+  scrollbar-width: 1;
+  flex-basis: 30%;
+  background-color: var(--background-semi-dark-color);
+}
+
+.career-dropdown-container {
+  padding-top: 10px;
+}
+
+.semester-dropdown-container {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.course {
+  padding: 10px 20px;
+  display: flex;
+  flex-flow: row;
+  
+  background-color: var(--background-medium-color);
+  align-items: center;
+}
+.course input{
+
+}
+.name-error {
+  padding-bottom: 10px;
+  color: red;
+}
+
+.add-section {
+  margin-left: auto;
+}
+
+.add-section button {
+  background-color: var(--background-semi-light-color);
+}
+
+.add-section button:hover {
+  background-color: var(--background-light-color);
+}
+
+.delete-section button {
+  font-size: 13px;
+  background-color: var(--background-semi-light-color);
+}
+
+.delete-section button:hover {
+  background-color: var(--background-light-color);
+}
+
+.section {
+  display: flex;
+  flex-flow: row;
+  padding-right: 20px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  align-items: center;
+
+}
+
+.delete-section {
+  margin-left: auto;
+}
+
+.section-edit-container {
+  display: flex;
+  flex-flow: row nowrap;
+  overflow: hidden;
+
+  flex-basis: 70%;
+}
+
+
+.editable-section-container {
+  display: flex;
+  flex-flow: column;
+  padding: 15px;
+  margin: 15px;
+  border-radius: 15px;
+
+  flex-basis: 100%;
+
+  background-color: var(--background-semi-dark-color);
+}
+
+.editable-section-header {
+  display: flex;
+  flex-flow: row nowrap;
+  
+}
+
+.editable-section-header div:nth-child(2) {
+  margin-left: auto;
+}
+
+.timeblock-container-selector {
+  display: flex;
+  flex-flow: row nowrap;
+}
+.time-error {
+  color: red;
+  
+}
+
+.timeblock-container button {
+  margin-left: auto;
+}
+
+.hour-selection-container {
+  display: flex;
+  flex-flow: row nowrap;
+  
+}
+
+.save-button {
+  margin-top: auto;
+  
+}
+
+.save-button button {
+  display: flex;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 30px;
+
+}
+
+.delete-day {
+  margin-left: auto;
+  margin-right: 10px;
+}
+
+.delete-day button {
+  background-color: var(--background-semi-light-color);
+}
+
+.delete-day button:hover {
+  background-color: var(--background-light-color);
+}
+
+
+.day-buttons {
+  display: flex;
+  flex-grow: row;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 10px;
+  background-color: var(--background-medium-color);
+}
+
+.basic-info {
+  margin-bottom: 10px;  
+}
+
+.teacher-container {
+  margin-bottom: 10px; 
+}
+
+.day-container {
+  margin-bottom: 10px; 
+}
+
+
+li {
+  list-style-type: none;
+}
+.save-subject {
+  display: flex;
+  flex-flow: wrap;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  border-radius: 15px;
+  background-color: var(--background-semi-dark-color);
+}
+
+.save-subject-header {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.save-subject-header div:nth-child(2) {
+  margin-left: auto;
+}
+
+
+.add-subject {
+  display: flex;
+  flex-flow: wrap;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  border-radius: 15px;
+  background-color: var(--background-semi-dark-color);
+}
+
+.add-subject-header {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.add-subject-header div:nth-child(2) {
+  margin-left: auto;
+}
+
+
+.add-subject button {
+  padding: 10px 20px;
+  align-self: flex-start;
+  margin: 10px;
+}
+
+.save-subject button {
+  padding: 10px 20px;
+  align-self: flex-start;
+  margin: 10px;
+}
+
+.centrar {
+  padding: 15px;
+}
+
+
+.Not-Error button {
+  background-color: red;
+  animation: buttonAnimation 1s infinite;
+}
+
+.Not-Error button:hover {
+  background-color: rgb(254, 100, 100);
+}
+
+.Not-Error button:active {
+  background-color: rgb(255, 226, 226);
+}
+
+@keyframes buttonAnimation {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+
+

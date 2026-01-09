@@ -1,0 +1,112 @@
+@import "./NavigationBar.css";
+
+.screen-container {
+  overflow: scroll;
+  scrollbar-width: none;
+
+  box-sizing: border-box;
+  padding-top: var(--navbar-size);
+
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+}
+
+.description-container {
+  display: flex;
+  flex-flow: column nowrap;
+  overflow: hidden;
+
+  justify-content: center;
+  align-items: center;
+  height: 75vh;
+
+  flex-grow:1;
+}
+
+.description-container h1 {
+  margin: unset;
+  font-size: 7.5rem;
+}
+
+.description-container p {
+  margin: unset;
+  max-width: 80vw;
+  font-size: 2rem;
+}
+
+.developers-container {
+  display: flex;
+  flex-flow: row wrap;
+  overflow: hidden;
+
+  justify-content: center;
+  align-items: center;
+  
+  margin-top: auto;
+  font-size: 2rem;
+}
+
+
+.developer-box {
+  display: flex;
+  flex-flow: column nowrap;
+  
+  justify-content: center;
+  margin-left: 10rem;
+  width: 15rem;
+
+  
+}
+
+.developer-box h2 {
+  margin: unset;
+  font-size: 1rem;
+  
+}
+
+.developer-box a {
+  margin: unset;
+  font-size: 1rem;
+}
+
+.developer-box p {
+  margin: unset;
+  font-size: 1rem;
+}
+
+.developer-box-title {
+  display: flex;
+  flex-flow: column nowrap;
+  overflow: hidden;
+
+  justify-content: center;
+  align-items: center;
+
+  font-size: 1rem;
+}
+
+@keyframes colorAnimation {
+  0% {
+    color: red;
+  }
+  25% {
+    color: rgb(0, 204, 255);
+  }
+  50% {
+    color: green;
+  }
+  75% {
+    color: rgb(255, 217, 0);
+  }
+  100% {
+    color: purple;
+  }
+}
+
+.description-container h1 {
+  margin: unset;
+  font-size: 7.5rem;
+  animation: colorAnimation 8s infinite;
+}

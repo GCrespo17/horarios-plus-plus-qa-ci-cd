@@ -1,0 +1,103 @@
+.main-container {
+	display: flex;
+	flex-direction: wrap;
+	
+	padding: 20px;
+}
+
+.perms-container {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items:center;
+	font-size: 25px;
+}
+
+.Usuarios{
+	display: flex;
+	flex-direction: column;
+	align-items: right;
+	justify-content: center;
+	padding: 20px;
+	margin-left: 275px;
+}
+
+.Usuarios h2 {
+	font-size: 40px;
+}
+
+#estudiante {color: rgb(255, 255, 255);}
+#estudiante-eventos {color : rgb(255, 252, 68);}
+#profesor {color: rgb(95, 255, 95);}
+#profesor-eventos {color: rgb(255, 160, 18);}	
+#admin {color: rgb(255, 0, 0);}
+
+
+.lista-usuarios {
+	
+	justify-content: flex-end;
+	align-items:flex-end;
+	margin-top: 20px;
+	font-size: 25px;
+	height: 500px;
+	overflow-y: scroll;
+}
+
+.user {
+	width: 500px;
+	height: 30px;
+	display: flex;
+	flex-direction: wrap;
+	justify-content: flex-end;
+
+	padding: 15px 0px;
+	font-size: 25px;
+}
+
+.user select{
+	height: auto;
+}
+
+#permiso{
+	margin-right: 10px;
+}
+
+.Usuarios button {
+	font-size: 20px;
+	padding: auto;
+	margin-top: 20px;
+	align-self: flex-end;
+}
+
+.lista-usuarios :hover {
+	background-color: var(--background-semi-dark-color);
+	color: white;
+}
+
+.user-email {
+	margin-left: 10px;
+	margin-right: auto;
+}
+
+.Titulo {
+	align-self: flex-start;
+}
+
+.Titulo {
+	font-size: 40px;
+    color: transparent;
+    background-image: linear-gradient(to left, #FFD700, #7B68EE, #3498db, #2ecc71, #FFD700);    
+    background-clip: text;
+    animation: color 3s linear infinite;
+    background-size: 500%;    
+}
+
+@keyframes color {
+    from {
+        background-position: 0% 50%;
+    }
+
+    to {
+        background-position: 100% 50%;
+    }
+}

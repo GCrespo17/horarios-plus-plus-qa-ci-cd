@@ -1,0 +1,169 @@
+.main-container{
+  display: flex;
+
+  /* Para posicionar el main container */
+  height: 100vh;
+  max-height: 100vh;
+  box-sizing: border-box;
+  padding-top: var(--navbar-size);
+
+  flex-flow: row nowrap;
+  overflow: hidden;
+} 
+
+.course-box {
+  display: flex;
+  flex-flow: column nowrap;
+  flex-basis: 20%;
+  overflow: hidden;
+
+  background-color: var(--background-semi-dark-color);
+
+}
+
+.schedule-box {
+  display: flex;
+  flex-flow: column nowrap;
+  overflow: scroll;
+
+  flex-basis: 80%;
+
+  padding: 15px;
+  margin: 15px;
+  border-radius: 15px;
+  
+  background-color: var(--background-semi-dark-color);
+}
+
+.course-container{
+  flex-grow: 1;
+  overflow: scroll;
+
+  background-color: var(--background-semi-dark-color);
+}
+
+
+.course {
+  padding: 10px 20px;
+  display: flex;
+  flex-flow: row;
+  background-color: var(--background-medium-color);
+}
+
+.section {
+  display: flex;
+  flex-flow: row;
+  padding-left: 10px;
+  padding-top: 5px;
+
+}
+
+.checkbox {
+  margin-left: auto;
+}
+
+.career-dropdown-container {
+  display: flex;
+  justify-content: center;
+}
+
+.semester-dropdown-container {
+  display: flex;
+  justify-content: center;
+}
+
+.generate-button-container {
+  display: flex;
+
+  justify-content: center;
+  margin-bottom: 30px; 
+  margin-top: auto;
+}
+
+.generate-button-container button{
+  font-size: 30px;  
+}
+
+.nav-buttons {
+  display: flex;
+  flex-flow: row;
+}
+
+.nav-buttons button {
+  font-size: 20px;
+}
+
+.r-button {
+  margin-left: auto;
+  margin-right: 15px;
+}
+
+.m-button{
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.l-button {
+  margin-right: auto;
+  margin-left: 15px;
+}
+
+.button-selected {
+  background-color: var(--foreground-hyperlink-color);
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: var(--background-semi-light-color);
+  border: 1px solid #dcdcdc;
+  border-radius: 5px;
+  font-size: 20px;
+}
+
+/* .action-buttons select {
+  padding: 1px 20px;
+  font-size: 15px;
+} */
+
+.action-buttons select {
+  padding: 1px 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 16px;
+  color: #333;
+  outline: none;
+  cursor: pointer;
+}
+
+.filter-button {
+  margin-left: auto;
+}
+
+.schedule-container {
+  display: flex;
+  flex-flow: column;
+
+  flex-grow: 1;
+  padding: 10px;
+
+  margin-bottom: 15px;
+  margin-top: 15px;
+  border-radius: 15px;
+  
+  background-color: var(--background-semi-light-color);
+}
+
+.schedule-flex {
+  display: flex;
+  flex-flow: row;
+  place-items: center;
+} 
+
+.two-schedules {
+  display: flex;
+  flex-flow: column;
+}

@@ -1,0 +1,106 @@
+.main-container {
+    display: flex;
+
+    /* Para posicionar el main container */
+    height: 100vh;
+    max-height: 100vh;
+    box-sizing: border-box;
+    padding-top: var(--navbar-size);
+
+    flex-flow: row nowrap;
+    overflow: hidden;
+
+}
+
+.login-container {
+    display: grid;
+    width: 100%;
+    place-items: center;
+}
+
+.login-bg {
+    display: flex;
+    flex-flow: column;
+    background-color: var(--background-medium-color);
+    padding: 50px;
+    border-radius: 4px;
+    font-size: 80px;
+}
+
+.login-header {
+    margin-bottom: 30px;
+}
+
+.login-user input,
+.login-password input {
+    padding: 15px 0px;
+    width: 100%;
+}
+
+.login-button {
+    align-self: center;
+}
+
+.login-button button {
+    font-size: 30px;
+    padding: 10px 15px;
+    background-color: var(--background-semi-light-color);
+}
+
+.login-button button:hover {
+    background-color: var(--background-light-color);
+}
+
+.login-button button:active {
+    background-color: white;
+}
+
+.login-error {
+    color: red;
+    font-size: 40%;
+}
+/* parte de los eventos */
+.selector-eventos {
+    margin-left: 10%;
+    border: 1px solid var(--secondary-color);
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    background-color: var(--primary-color);
+    color : white;
+    
+}
+
+.selector-eventos:hover {
+    
+    background-color: azure;
+    color: black;
+}
+
+.visor-eventos {
+    display: table-column;
+    margin-left: 10%;
+    border: 1px solid white;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    background-color: var(--background-medium-color);
+    color : white;
+    align-items: center;
+    background-color: var();
+    width: 30%;
+}
+.puede{
+    color: rgb(6, 230, 6);
+    font-weight: bold;
+}
+.no-puede{
+    color: red;
+    font-weight: bold;
+}
+.puede-asistir {
+    color: var(--success-color);
+    font-weight: bold;
+}

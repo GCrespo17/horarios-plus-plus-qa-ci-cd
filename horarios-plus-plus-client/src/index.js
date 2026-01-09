@@ -1,33 +1,36 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import reportWebVitals from "./reportWebVitals.js";
 
-function Home() {
-  return (
-    <div className="home">
-      <h2>Bienvenido a Horarios++</h2>
-      <p>Sistema de gestión de horarios</p>
-    </div>
-  );
-}
+import LandingInterface from "./Interfaces/LandingInterface.tsx";
+import GenerationInterface from "./Interfaces/GenerationInterface.tsx";
+import LogInInterface from "./Interfaces/LogInInterface.tsx";
+import SignUpInterface from "./Interfaces/SignUpInterface.tsx";
+import MySheduleInterface from "./Interfaces/MyScheduleInterface.tsx";
+import TimeBlockInterface from "./Interfaces/TimeBlockInterface.tsx";
+import PermsInterface from "./Interfaces/PermsPage.tsx";
+import EventsInterface from "./Interfaces/EventsInterface.tsx";
+
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 export default function App() {
-  return (
-    <Router>
-      <div className="app">
-        <header className="header">
-          <h1>Horarios++</h1>
-        </header>
-        <main className="main">
-          <Routes>
-            <Route path="/" element={<Home />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
-  );
+	return (
+		<BrowserRouter>
+			<Routes>
+				<Route path="/">
+					<Route index element={<LandingInterface />} />
+					<Route path="generation" element={<GenerationInterface />} />
+					<Route path="time_blocks" element={<TimeBlockInterface />} />
+					<Route path="login" element={<LogInInterface />} />
+					<Route path="sign_up" element={<SignUpInterface />} />
+					<Route path="schedule" element={<MySheduleInterface />} />
+					<Route path="perms" element={<PermsInterface />} />
+					<Route path="events" element={<EventsInterface />} />
+				</Route>
+			</Routes>
+		</BrowserRouter>
+	);
 }
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
