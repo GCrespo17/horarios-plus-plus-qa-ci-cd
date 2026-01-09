@@ -115,11 +115,28 @@ jobs:
       - name: Instalar dependencias
         run: bun install
 
+      - name: Verificar conexión a MongoDB
+        run: |
+          echo "Verificando que MongoDB esté disponible..."
+          for i in {1..10}; do
+            if nc -z localhost 27017 2>/dev/null; then
+              echo "MongoDB está disponible en el puerto 27017"
+              exit 0
+            fi
+            echo "Esperando MongoDB... intento $i/10"
+            sleep 2
+          done
+          echo "MongoDB no está disponible"
+          exit 1
+
       - name: Iniciar servidor en background
         run: |
-          bun run src/index.ts &
+          nohup bun run src/index.ts > server.log 2>&1 &
           SERVER_PID=$!
           echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+          echo "Servidor iniciado con PID: $SERVER_PID"
+          sleep 3
+          cat server.log || true
         env:
           MONGO_URI: mongodb://localhost:27017/horarios-test
           PORT: 4000
@@ -129,13 +146,19 @@ jobs:
         run: |
           echo "Esperando que el servidor esté listo en localhost:4000..."
           for i in {1..30}; do
-            if curl -s http://localhost:4000 | grep -q "Elysia"; then
+            echo "Intento $i/30..."
+            if curl -s --max-time 5 http://localhost:4000 2>/dev/null; then
+              echo ""
               echo "Servidor respondiendo correctamente"
               exit 0
             fi
-            echo "Intento $i/30..."
+            # Mostrar logs del servidor para debug
+            echo "Últimas líneas del log:"
+            tail -5 server.log 2>/dev/null || true
             sleep 2
           done
+          echo "=== LOGS COMPLETOS DEL SERVIDOR ==="
+          cat server.log || true
           echo "Servidor no respondió después de 60 segundos"
           exit 1
 
@@ -144,6 +167,12 @@ jobs:
         env:
           MONGO_URI: mongodb://localhost:27017/horarios-test
           BASE_URL: http://localhost:4000/api
+
+      - name: Mostrar logs del servidor (debug)
+        if: failure()
+        run: |
+          echo "=== LOGS DEL SERVIDOR ==="
+          cat server.log || echo "No hay logs disponibles"
 
       - name: Detener servidor
         if: always()
