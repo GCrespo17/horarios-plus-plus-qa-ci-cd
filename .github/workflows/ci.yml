@@ -135,7 +135,8 @@ jobs:
           SERVER_PID=$!
           echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
           echo "Servidor iniciado con PID: $SERVER_PID"
-          sleep 3
+          # Dar más tiempo inicial para que conecte a MongoDB
+          sleep 5
           cat server.log || true
         env:
           MONGO_URI: mongodb://localhost:27017/horarios-test
@@ -145,21 +146,25 @@ jobs:
       - name: Esperar que el servidor esté listo
         run: |
           echo "Esperando que el servidor esté listo en localhost:4000..."
-          for i in {1..30}; do
-            echo "Intento $i/30..."
-            if curl -s --max-time 5 http://localhost:4000 2>/dev/null; then
+          for i in {1..45}; do
+            echo "Intento $i/45..."
+            # Verificar que responda en /health (verifica servidor + MongoDB)
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://localhost:4000/health 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "Servidor respondiendo correctamente (HTTP $HTTP_CODE)"
+              curl -s http://localhost:4000/health
               echo ""
-              echo "Servidor respondiendo correctamente"
               exit 0
             fi
+            echo "HTTP Code: $HTTP_CODE"
             # Mostrar logs del servidor para debug
             echo "Últimas líneas del log:"
-            tail -5 server.log 2>/dev/null || true
+            tail -3 server.log 2>/dev/null || true
             sleep 2
           done
           echo "=== LOGS COMPLETOS DEL SERVIDOR ==="
           cat server.log || true
-          echo "Servidor no respondió después de 60 segundos"
+          echo "Servidor no respondió después de 90 segundos"
           exit 1
 
       - name: Ejecutar tests de integración

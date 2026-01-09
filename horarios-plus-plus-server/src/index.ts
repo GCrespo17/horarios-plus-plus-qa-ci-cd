@@ -63,6 +63,14 @@ class main {
 			.use(cors())
 			.use(openapi())
 			.get("/", () => "Hello Elysia")
+			.get("/health", () => {
+				// Verificar conexión a MongoDB
+				const isConnected = mongoose.connection.readyState === 1;
+				if (isConnected) {
+					return { status: "ok", db: "connected" };
+				}
+				return new Response(JSON.stringify({ status: "error", db: "disconnected" }), { status: 503 });
+			})
 			.use(pluginSchedule({ prefix: "Schedules" }, controladordb))
 			.use(pluginSession({ prefix: "Sessions" }, controladordb))
 			.use(pluginSection({ prefix: "Sections" }, controladordb))
