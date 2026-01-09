@@ -129,7 +129,7 @@ jobs:
         run: |
           echo "Esperando que el servidor esté listo en localhost:4000..."
           for i in {1..30}; do
-            if curl -f http://localhost:4000 2>/dev/null; then
+            if curl -s http://localhost:4000 | grep -q "Elysia"; then
               echo "Servidor respondiendo correctamente"
               exit 0
             fi
@@ -143,7 +143,7 @@ jobs:
         run: bun test src/routes/integration.test.ts
         env:
           MONGO_URI: mongodb://localhost:27017/horarios-test
-          API_URL: http://localhost:4000
+          BASE_URL: http://localhost:4000/api
 
       - name: Detener servidor
         if: always()
