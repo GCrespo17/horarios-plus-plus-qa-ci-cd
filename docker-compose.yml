@@ -1,0 +1,26 @@
+services:
+  server:
+    build:
+      context: /home/gcrespo/dev/Horarios-plus-plus-sqa
+      dockerfile: horarios-plus-plus-server/Dockerfile
+    env_file:
+      - /home/gcrespo/dev/Horarios-plus-plus-sqa/.env
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017/horariospp}
+      CREATE_ADMIN_ON_START: ${CREATE_ADMIN_ON_START:-true}
+    ports:
+      - "4000:4000"
+    restart: unless-stopped
+
+  client:
+    build:
+      context: /home/gcrespo/dev/Horarios-plus-plus-sqa
+      dockerfile: horarios-plus-plus-client/Dockerfile
+    env_file:
+      - /home/gcrespo/dev/Horarios-plus-plus-sqa/.env
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+    restart: unless-stopped
