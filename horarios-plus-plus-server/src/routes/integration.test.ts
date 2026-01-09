@@ -7,6 +7,39 @@ let createdSubjectName: string;
 let createdNrc: string;
 
 // =============================================================================
+// Health Check - Verificar conexión antes de tests
+// =============================================================================
+describe("Health Check", () => {
+	test("El servidor debe estar disponible", async () => {
+		console.log(`Intentando conectar a: ${BASE_URL.replace('/api', '')}/health`);
+		
+		// Reintentar hasta 5 veces con delay
+		let lastError: Error | null = null;
+		for (let i = 0; i < 5; i++) {
+			try {
+				const response = await fetch(`${BASE_URL.replace('/api', '')}/health`, {
+					method: "GET",
+				});
+				
+				console.log(`Health check response: ${response.status}`);
+				expect(response.status).toBe(200);
+				
+				const data = await response.json();
+				console.log(`Health check data:`, data);
+				expect(data.status).toBe("ok");
+				return; // Éxito, salir del test
+			} catch (error) {
+				lastError = error as Error;
+				console.log(`Intento ${i + 1}/5 falló: ${lastError.message}`);
+				await new Promise(resolve => setTimeout(resolve, 1000));
+			}
+		}
+		
+		throw lastError || new Error("No se pudo conectar al servidor");
+	});
+});
+
+// =============================================================================
 // CP-INT-01: Persistencia de Nueva Sección
 // =============================================================================
 // Valida que al enviar datos de sección al endpoint, el registro se crea

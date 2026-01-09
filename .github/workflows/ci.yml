@@ -167,11 +167,39 @@ jobs:
           echo "Servidor no respondió después de 90 segundos"
           exit 1
 
+      - name: Verificar endpoint real antes de tests
+        run: |
+          echo "Verificando que las rutas /api funcionen..."
+          # Probar un endpoint real
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "http://localhost:4000/api/subjects/get_subjects" 2>/dev/null || echo "000")
+          echo "GET /api/subjects/get_subjects -> HTTP $HTTP_CODE"
+          
+          # Verificar que el servidor sigue corriendo
+          if ! kill -0 $SERVER_PID 2>/dev/null; then
+            echo "ERROR: El servidor ya no está corriendo!"
+            cat server.log || true
+            exit 1
+          fi
+          
+          # Mostrar el PID y puerto
+          echo "Servidor PID: $SERVER_PID"
+          netstat -tlnp 2>/dev/null | grep 4000 || ss -tlnp | grep 4000 || true
+          
+          # Dar tiempo adicional
+          sleep 2
+
       - name: Ejecutar tests de integración
-        run: bun test src/routes/integration.test.ts
+        run: |
+          # Verificar una vez más antes de correr tests
+          echo "Verificando servidor con curl..."
+          curl -v http://127.0.0.1:4000/health 2>&1 || echo "Health check falló"
+          echo ""
+          echo "Ejecutando tests de integración..."
+          bun test src/routes/integration.test.ts --timeout 30000
         env:
           MONGO_URI: mongodb://localhost:27017/horarios-test
-          BASE_URL: http://localhost:4000/api
+          # Usar 127.0.0.1 en lugar de localhost para evitar problemas de resolución DNS
+          BASE_URL: http://127.0.0.1:4000/api
 
       - name: Mostrar logs del servidor (debug)
         if: failure()
