@@ -4,6 +4,14 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import reportWebVitals from "./reportWebVitals.js";
 
+function Home() {
+  return (
+    <div className="home">
+      <h2>Bienvenido a Horarios++</h2>
+      <p>Sistema de gestión de horarios</p>
+    </div>
+  );
+}
 
 export default function App() {
   return (
