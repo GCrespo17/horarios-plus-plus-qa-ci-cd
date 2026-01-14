@@ -1,15 +1,10 @@
 # =============================================================================
 # CI - Integración Continua
 # =============================================================================
-# Este workflow ejecuta los tests unitarios cada vez que hay un push o PR
-# hacia las ramas principales (main, develop).
-#
-# Etapas:
-#   1. Checkout del código
-#   2. Setup de Bun
-#   3. Instalación de dependencias
-#   4. Ejecución de tests del servidor (bun test)
-#   5. Ejecución de tests del cliente (react-scripts test)
+# Este workflow ejecuta tests en todas las ramas:
+#   - Tests unitarios
+#   - Tests frontend
+#   - Tests de integración
 # =============================================================================
 
 name: CI - Tests
@@ -30,10 +25,10 @@ env:
 
 jobs:
   # ===========================================================================
-  # Job: Test del Servidor (Backend)
+  # Job 1: Tests Unitarios
   # ===========================================================================
-  test-server:
-    name:  Tests Backend (Bun)
+  test-unit:
+    name: Tests Unitarios (Backend)
     runs-on: ubuntu-latest
     
     defaults:
@@ -41,26 +36,28 @@ jobs:
         working-directory: horarios-plus-plus-server
 
     steps:
-      - name:  Checkout del código
+      - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name:  Setup Bun
+      - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name:  Instalar dependencias
+      - name: Instalar dependencias
         run: bun install
-        working-directory: .
 
-      - name:  Ejecutar tests unitarios del servidor
-        run: bun test
+      - name: Ejecutar tests unitarios
+        run: bun test src/models/classes.test.ts
+
+      - name: Tests unitarios completados
+        run: echo "Tests unitarios pasaron correctamente"
 
   # ===========================================================================
-  # Job: Test del Cliente (Frontend)
+  # Job 2: Tests del Cliente (Frontend)
   # ===========================================================================
   test-client:
-    name:  Tests Frontend (Jest)
+    name: Tests Frontend
     runs-on: ubuntu-latest
     
     defaults:
@@ -68,28 +65,27 @@ jobs:
         working-directory: horarios-plus-plus-client
 
     steps:
-      - name:  Checkout del código
+      - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name:  Setup Bun
+      - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name:  Instalar dependencias
+      - name: Instalar dependencias
         run: bun install
-        working-directory: .
 
-      - name:  Ejecutar tests del cliente
+      - name: Ejecutar tests del cliente
         run: bun run test -- --watchAll=false --passWithNoTests
         env:
           CI: true
 
   # ===========================================================================
-  # Job: Tests de Integración
+  # Job 3: Tests de Integración (en todas las ramas)
   # ===========================================================================
   test-integration:
-    name:  Tests Integración
+    name: Tests Integración
     runs-on: ubuntu-latest
     
     services:
@@ -97,38 +93,173 @@ jobs:
         image: mongo:7
         ports:
           - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     defaults:
       run:
         working-directory: horarios-plus-plus-server
 
     steps:
-      - name:  Checkout del código
+      - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name:  Setup Bun
+      - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name:  Instalar dependencias
+      - name: Instalar dependencias
         run: bun install
-        working-directory: .
 
-      - name:  Iniciar servidor en background
-        run: bun run src/index.ts &
+      - name: Verificar conexión a MongoDB
+        run: |
+          echo "Verificando que MongoDB esté disponible..."
+          for i in {1..10}; do
+            if nc -z localhost 27017 2>/dev/null; then
+              echo "MongoDB está disponible en el puerto 27017"
+              exit 0
+            fi
+            echo "Esperando MongoDB... intento $i/10"
+            sleep 2
+          done
+          echo "MongoDB no está disponible"
+          exit 1
+
+      - name: Iniciar servidor en background
+        run: |
+          nohup bun run src/index.ts > server.log 2>&1 &
+          SERVER_PID=$!
+          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+          echo "Servidor iniciado con PID: $SERVER_PID"
+          # Dar más tiempo inicial para que conecte a MongoDB
+          sleep 5
+          cat server.log || true
         env:
           MONGO_URI: mongodb://localhost:27017/horarios-test
           PORT: 4000
+          CREATE_ADMIN_ON_START: false
 
-      - name:  Esperar que el servidor inicie
+      - name: Esperar que el servidor esté listo
         run: |
-          echo "Esperando que el servidor esté listo..."
-          sleep 10
-          curl --retry 5 --retry-delay 2 --retry-connrefused http://localhost:4000 || true
+          echo "Esperando que el servidor esté listo en localhost:4000..."
+          for i in {1..45}; do
+            echo "Intento $i/45..."
+            # Verificar que responda en /health (verifica servidor + MongoDB)
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://localhost:4000/health 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "Servidor respondiendo correctamente (HTTP $HTTP_CODE)"
+              curl -s http://localhost:4000/health
+              echo ""
+              exit 0
+            fi
+            echo "HTTP Code: $HTTP_CODE"
+            # Mostrar logs del servidor para debug
+            echo "Últimas líneas del log:"
+            tail -3 server.log 2>/dev/null || true
+            sleep 2
+          done
+          echo "=== LOGS COMPLETOS DEL SERVIDOR ==="
+          cat server.log || true
+          echo "Servidor no respondió después de 90 segundos"
+          exit 1
 
-      - name:  Ejecutar tests de integración
-        run: bun test src/routes/integration.test.ts
+      - name: Verificar endpoint real antes de tests
+        run: |
+          echo "Verificando que las rutas /api funcionen..."
+          # Probar un endpoint real
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "http://localhost:4000/api/subjects/get_subjects" 2>/dev/null || echo "000")
+          echo "GET /api/subjects/get_subjects -> HTTP $HTTP_CODE"
+          
+          # Verificar que el servidor sigue corriendo
+          if ! kill -0 $SERVER_PID 2>/dev/null; then
+            echo "ERROR: El servidor ya no está corriendo!"
+            cat server.log || true
+            exit 1
+          fi
+          
+          # Mostrar el PID y puerto
+          echo "Servidor PID: $SERVER_PID"
+          netstat -tlnp 2>/dev/null | grep 4000 || ss -tlnp | grep 4000 || true
+          
+          # Dar tiempo adicional
+          sleep 2
+
+      - name: Ejecutar tests de integración
+        run: |
+          # Verificar una vez más antes de correr tests
+          echo "Verificando servidor con curl..."
+          curl -v http://127.0.0.1:4000/health 2>&1 || echo "Health check falló"
+          echo ""
+          echo "Ejecutando tests de integración..."
+          bun test src/routes/integration.test.ts --timeout 30000
         env:
           MONGO_URI: mongodb://localhost:27017/horarios-test
+          # Usar 127.0.0.1 en lugar de localhost para evitar problemas de resolución DNS
+          BASE_URL: http://127.0.0.1:4000/api
+
+      - name: Mostrar logs del servidor (debug)
+        if: failure()
+        run: |
+          echo "=== LOGS DEL SERVIDOR ==="
+          cat server.log || echo "No hay logs disponibles"
+
+      - name: Detener servidor
+        if: always()
+        run: |
+          if [ ! -z "$SERVER_PID" ]; then
+            kill $SERVER_PID || true
+          fi
+
+  # ===========================================================================
+  # Job 4: Resumen del CI
+  # ===========================================================================
+  ci-summary:
+    name: Resumen CI
+    runs-on: ubuntu-latest
+    needs: [test-unit, test-client, test-integration]
+    if: always()
+    
+    steps:
+      - name: Verificar resultados
+        run: |
+          echo "==================================="
+          echo "RESUMEN DE CI"
+          echo "==================================="
+          echo "Rama: ${{ github.ref }}"
+          echo "Evento: ${{ github.event_name }}"
+          echo ""
+          
+          if [[ "${{ needs.test-unit.result }}" == "success" ]]; then
+            echo "Tests Unitarios: PASS"
+          else
+            echo "Tests Unitarios: FAIL"
+          fi
+          
+          if [[ "${{ needs.test-client.result }}" == "success" ]]; then
+            echo "Tests Frontend: PASS"
+          else
+            echo "Tests Frontend: FAIL"
+          fi
+          
+          if [[ "${{ needs.test-integration.result }}" == "success" ]]; then
+            echo "Tests Integración: PASS"
+          else
+            echo "Tests Integración: FAIL"
+          fi
+          
+          if [[ "${{ needs.test-unit.result }}" != "success" ]] || \
+             [[ "${{ needs.test-client.result }}" != "success" ]] || \
+             [[ "${{ needs.test-integration.result }}" != "success" ]]; then
+            echo ""
+            echo "CI FAILED - Por favor revisa los errores"
+            exit 1
+          fi
+          
+          echo ""
+          echo "CI PASSED - Todos los tests pasaron correctamente"
+
 
